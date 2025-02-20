@@ -73,7 +73,7 @@ class Renderer:
     DARK = (148, 133, 115)  # Mountain
     START = (214, 36, 99)  # Red
     GOAL = (18, 166, 48)  # Green
-    PATH = (44, 168, 52)  #
+    PATH = (44, 168, 52)  # Path Green
 
     def __init__(self, game):
         self.game = game
@@ -90,6 +90,11 @@ class Renderer:
                 else:
                     self.window.set_at((x, y), Renderer.DARK)
 
+        # Draw path with double thickness
+        if path:
+            for state in path:
+                pygame.draw.circle(self.window, Renderer.PATH, (state.x, state.y), 1)
+
         # Draw start and goal
         pygame.draw.circle(
             self.window, Renderer.START, (self.game.start.x, self.game.start.y), 5
@@ -97,11 +102,6 @@ class Renderer:
         pygame.draw.circle(
             self.window, Renderer.GOAL, (self.game.goal.x, self.game.goal.y), 5
         )
-
-        # Draw path
-        if path:
-            for state in path:
-                self.window.set_at((state.x, state.y), Renderer.PATH)
 
         pygame.display.flip()
 
@@ -115,6 +115,7 @@ class Node:
 
 class AStar:
     WEIGHT = 1
+
     def __init__(self, game):
         self.game = game
         self.frontier = MinHeap()
@@ -183,7 +184,7 @@ class AStar:
 
 
 if __name__ == "__main__":
-    game = Game(500, 500)
+    game = Game(400, 400)
     renderer = Renderer(game)
     astar = AStar(game)
     path = astar.search()

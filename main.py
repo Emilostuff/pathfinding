@@ -59,8 +59,10 @@ class Game:
 
 
 class Renderer:
-    LIGHT_COLOR = (200, 220, 255)  # Water
-    DARK_COLOR = (50, 100, 50)  # Land
+    LIGHT = (227, 211, 191)  # Land
+    DARK = (56, 49, 59)  # Mountain
+    START = (214, 36, 99)  # Red
+    GOAL = (55, 204, 65)  # Green
 
     def __init__(self, game):
         self.game = game
@@ -73,16 +75,16 @@ class Renderer:
         for y in range(self.game.height):
             for x in range(self.game.width):
                 if self.game.grid[y][x]:
-                    self.window.set_at((x, y), Renderer.DARK_COLOR)
+                    self.window.set_at((x, y), Renderer.DARK)
                 else:
-                    self.window.set_at((x, y), Renderer.LIGHT_COLOR)
+                    self.window.set_at((x, y), Renderer.LIGHT)
 
         # Draw start and goal
         pygame.draw.circle(
-            self.window, (255, 0, 0), (self.game.start.x, self.game.start.y), 5
+            self.window, Renderer.START, (self.game.start.x, self.game.start.y), 5
         )
         pygame.draw.circle(
-            self.window, (0, 255, 0), (self.game.goal.x, self.game.goal.y), 5
+            self.window, Renderer.GOAL, (self.game.goal.x, self.game.goal.y), 5
         )
         pygame.display.flip()
 

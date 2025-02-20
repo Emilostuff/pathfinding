@@ -84,27 +84,6 @@ class Renderer:
         pygame.display.set_caption("Pathfinding")
 
     def draw(self, path=None):
-        # for y in range(self.game.height):
-        #     for x in range(self.game.width):
-        #         if self.game.grid[y][x]:
-        #             self.window.set_at((x, y), Renderer.LIGHT)
-        #         else:
-        #             self.window.set_at((x, y), Renderer.DARK)
-
-        # # Draw path with double thickness
-        # if path:
-        #     for state in path:
-        #         pygame.draw.circle(self.window, Renderer.PATH, (state.x, state.y), 1)
-
-        # # Draw start and goal
-        # pygame.draw.circle(
-        #     self.window, Renderer.START, (self.game.start.x, self.game.start.y), 5
-        # )
-        # pygame.draw.circle(
-        #     self.window, Renderer.GOAL, (self.game.goal.x, self.game.goal.y), 5
-        # )
-
-        # draw tiles
         for y in range(self.game.height):
             for x in range(self.game.width):
                 if self.game.grid[y][x]:
@@ -225,16 +204,14 @@ class AStar:
 
 if __name__ == "__main__":
     game = Game(200, 200)
-    renderer = Renderer(game)
     astar = AStar(game)
     path = astar.search()
+    renderer = Renderer(game)
     renderer.draw(path=path)
 
     # Main loop
     running = True
     while running:
-        pygame.display.flip()  # Update display
-
         # Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

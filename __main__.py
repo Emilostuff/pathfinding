@@ -11,9 +11,9 @@ class State:
 
 
 class Game:
-    INSET = 50
-    THRESHOLD = 0.1
-    SEED = 8
+    INSET = 10
+    THRESHOLD = 0.06
+    SEED = 16
 
     def __init__(self, width, height):
         self.width = width
@@ -24,7 +24,7 @@ class Game:
         self.goal = self.goal_state()
 
     def generate_islands(self):
-        noise = PerlinNoise(octaves=9, seed=Game.SEED)
+        noise = PerlinNoise(octaves=8, seed=Game.SEED)
         xpix, ypix = self.width, self.height
 
         pic = [[noise([i / xpix, j / ypix]) for j in range(xpix)] for i in range(ypix)]
@@ -74,33 +74,73 @@ class Renderer:
     START = (214, 36, 99)  # Red
     GOAL = (18, 166, 48)  # Green
     PATH = (44, 168, 52)  # Path Green
+    TILE_SIZE = 4
 
     def __init__(self, game):
         self.game = game
 
         pygame.init()
-        self.window = pygame.display.set_mode((game.width, game.height))
+        self.window = pygame.display.set_mode((game.width * Renderer.TILE_SIZE, game.height * Renderer.TILE_SIZE))
         pygame.display.set_caption("Pathfinding")
 
     def draw(self, path=None):
+        # for y in range(self.game.height):
+        #     for x in range(self.game.width):
+        #         if self.game.grid[y][x]:
+        #             self.window.set_at((x, y), Renderer.LIGHT)
+        #         else:
+        #             self.window.set_at((x, y), Renderer.DARK)
+
+        # # Draw path with double thickness
+        # if path:
+        #     for state in path:
+        #         pygame.draw.circle(self.window, Renderer.PATH, (state.x, state.y), 1)
+
+        # # Draw start and goal
+        # pygame.draw.circle(
+        #     self.window, Renderer.START, (self.game.start.x, self.game.start.y), 5
+        # )
+        # pygame.draw.circle(
+        #     self.window, Renderer.GOAL, (self.game.goal.x, self.game.goal.y), 5
+        # )
+
+        # draw tiles
         for y in range(self.game.height):
             for x in range(self.game.width):
                 if self.game.grid[y][x]:
-                    self.window.set_at((x, y), Renderer.LIGHT)
+                    pygame.draw.rect(
+                        self.window,
+                        Renderer.LIGHT,
+                        (x * Renderer.TILE_SIZE, y * Renderer.TILE_SIZE, Renderer.TILE_SIZE, Renderer.TILE_SIZE),
+                    )
                 else:
-                    self.window.set_at((x, y), Renderer.DARK)
+                    pygame.draw.rect(
+                        self.window,
+                        Renderer.DARK,
+                        (x * Renderer.TILE_SIZE, y * Renderer.TILE_SIZE, Renderer.TILE_SIZE, Renderer.TILE_SIZE),
+                    )
 
-        # Draw path with double thickness
+        # Draw path 
         if path:
             for state in path:
-                pygame.draw.circle(self.window, Renderer.PATH, (state.x, state.y), 1)
+                pygame.draw.rect(
+                    self.window,
+                    Renderer.PATH,
+                    (state.x * Renderer.TILE_SIZE, state.y * Renderer.TILE_SIZE, Renderer.TILE_SIZE, Renderer.TILE_SIZE),
+                )
 
         # Draw start and goal
         pygame.draw.circle(
-            self.window, Renderer.START, (self.game.start.x, self.game.start.y), 5
+            self.window,
+            Renderer.START,
+            (self.game.start.x * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2, self.game.start.y * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2),
+            Renderer.TILE_SIZE * 2
         )
         pygame.draw.circle(
-            self.window, Renderer.GOAL, (self.game.goal.x, self.game.goal.y), 5
+            self.window,
+            Renderer.GOAL,
+            (self.game.goal.x * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2, self.game.goal.y * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2),
+            Renderer.TILE_SIZE * 2
         )
 
         pygame.display.flip()
@@ -184,7 +224,7 @@ class AStar:
 
 
 if __name__ == "__main__":
-    game = Game(400, 400)
+    game = Game(200, 200)
     renderer = Renderer(game)
     astar = AStar(game)
     path = astar.search()

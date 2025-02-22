@@ -15,19 +15,21 @@ class State:
 class Game:
     INSET = 10
     THRESHOLD = 0.08
-    SEED = random.randint(0, 1000)
     SQRT2 = 2**0.5
 
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.grid = [[True for _ in range(width)] for _ in range(height)]
+        self.new_game()
+
+    def new_game(self):
+        self.grid = [[True for _ in range(self.width)] for _ in range(self.height)]
         self.generate_islands()
         self.start = self.starting_state()
         self.goal = self.goal_state()
 
     def generate_islands(self):
-        noise = PerlinNoise(octaves=8, seed=Game.SEED)
+        noise = PerlinNoise(octaves=8, seed=random.randint(0, 100000))
         xpix, ypix = self.width, self.height
 
         pic = [[noise([i / xpix, j / ypix]) for j in range(xpix)] for i in range(ypix)]
@@ -93,7 +95,7 @@ class Renderer:
         self.game = game
 
         self.window = pygame.display.set_mode(
-            (game.width * Renderer.TILE_SIZE + 400, game.height * Renderer.TILE_SIZE)
+            (game.width * Renderer.TILE_SIZE, game.height * Renderer.TILE_SIZE)
         )
         pygame.display.set_caption("Pathfinding")
 
@@ -146,11 +148,6 @@ class Renderer:
         self.draw_circle(self.game.start.x, self.game.start.y, Renderer.START)
         self.draw_circle(self.game.goal.x, self.game.goal.y, Renderer.GOAL)
 
-        # test
-        font = pygame.freetype.Font("assets/menlo.ttc", 24)
-        text = font.render("A* WEIGHT", (255, 255, 255), (0, 0, 0))
-        self.window.blit(text[0], dest=(800, 10))
-
         pygame.display.flip()
 
 
@@ -166,9 +163,17 @@ class AStar:
 
     def __init__(self, game):
         self.game = game
+        self.reset()
+
+    def reset(self):
         self.frontier = MinHeap()
         self.in_frontier = dict()
         self.explored = set()
+        self.path = None
+
+         # Add start node to the frontier
+        start = Node(self.game.start, None, 0)
+        self.add_to_frontier(start)
 
     def heuristic(self, node):
         return self.game.distance_to_goal(node.state) * AStar.WEIGHT
@@ -200,18 +205,22 @@ class AStar:
         del self.in_frontier[node.state]
         return node
 
-    def search(self):
-        # Add start node to the frontier
-        start = Node(self.game.start, None, 0)
-        self.add_to_frontier(start)
+    def search(self, n):
+        if self.path:
+            return self.path
 
-        while not self.frontier.empty():
+        i = 0
+        current = None
+        while not self.frontier.empty() and i < n:
+            i += 1
+            
             # Get the node with the lowest cost
             current = self.pop_from_frontier()
 
             # Check if the node is the goal
             if self.game.is_goal(current.state):
-                return self.solution(current)
+                self.path = self.solution(current)
+                return self.path
 
             # Add the node to the explored set
             self.explored.add(current.state)
@@ -221,7 +230,10 @@ class AStar:
                 child = Node(state, current, current.path_cost + cost)
                 self.add_to_frontier(child)
 
-        return None
+        if self.frontier.empty():
+            return None
+        else:
+            return self.solution(current)
 
     def solution(self, node):
         path = []
@@ -236,39 +248,61 @@ if __name__ == "__main__":
     pygame.font.init()
     clock = pygame.time.Clock()
 
-    while True:
-        game = Game(100, 100)
-        astar = AStar(game)
-        if astar.search():
-            break
-
+    game = Game(100, 100)
+    astar = AStar(game)
     renderer = Renderer(game)
+
+
+    move_interval = 20
+    last_move = pygame.time.get_ticks()
 
     # Main loop
     running = True
+    animate = True
     while running:
-        clock.tick(30)
-        # Event handling
+        
+        # Handle close event
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Handle movement
+        # Get key events
         keys = pygame.key.get_pressed()
-        x, y = game.start.x, game.start.y
-        if keys[pygame.K_LEFT] and game.is_valid(State(x - 1, y)):
-            x -= 1
-        if keys[pygame.K_RIGHT] and game.is_valid(State(x + 1, y)):
-            x += 1
-        if keys[pygame.K_UP] and game.is_valid(State(x, y - 1)):
-            y -= 1
-        if keys[pygame.K_DOWN] and game.is_valid(State(x, y + 1)):
-            y += 1
 
-        game.start = State(x, y)
+        # Handle movement (if enough time has passed since last move)
+        current_time = pygame.time.get_ticks()
+        if current_time - last_move >= move_interval:
+            x, y = game.start.x, game.start.y
+            if keys[pygame.K_LEFT] and game.is_valid(State(x - 1, y)):
+                x -= 1
+            if keys[pygame.K_RIGHT] and game.is_valid(State(x + 1, y)):
+                x += 1
+            if keys[pygame.K_UP] and game.is_valid(State(x, y - 1)):
+                y -= 1
+            if keys[pygame.K_DOWN] and game.is_valid(State(x, y + 1)):
+                y += 1
 
-        astar = AStar(game)
-        path = astar.search()
+            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_UP] or keys[pygame.K_DOWN]:
+                game.start = State(x, y)
+                astar.reset()
+                last_move = current_time
+
+        # Handle reload
+        if keys[pygame.K_r]:
+            game.new_game()
+            astar.reset()
+        if keys[pygame.K_s]:
+            animate = False
+        if keys[pygame.K_a]:
+            animate = True
+            astar.reset()
+
+        # Search and draw
+        if animate:
+            path = astar.search(10)
+        else:
+            path = astar.search(100000000)
+            
         renderer.draw(path=path, astar=astar)
 
     pygame.quit()

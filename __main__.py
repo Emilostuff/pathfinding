@@ -283,9 +283,10 @@ if __name__ == "__main__":
                 y += 1
 
             if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_UP] or keys[pygame.K_DOWN]:
-                game.start = State(x, y)
-                astar.reset()
-                last_move = current_time
+                if game.start != State(x, y):
+                    game.start = State(x, y)
+                    astar.reset()
+                    last_move = current_time
 
         # Handle reload
         if keys[pygame.K_r]:

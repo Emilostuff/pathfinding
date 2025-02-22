@@ -3,6 +3,7 @@ from perlin_noise import PerlinNoise
 from algoaid import MinHeap
 from dataclasses import dataclass
 import random
+import math
 
 
 @dataclass(frozen=True)
@@ -75,7 +76,7 @@ class Game:
 
     def distance_to_goal(self, state):
         # straight line distance
-        return ((state.x - self.goal.x) ** 2 + (state.y - self.goal.y) ** 2) ** 0.5
+        return math.hypot(state.x - self.goal.x, state.y - self.goal.y)
 
 
 class Renderer:
@@ -92,7 +93,7 @@ class Renderer:
         self.game = game
 
         self.window = pygame.display.set_mode(
-            (game.width * Renderer.TILE_SIZE, game.height * Renderer.TILE_SIZE)
+            (game.width * Renderer.TILE_SIZE + 400, game.height * Renderer.TILE_SIZE)
         )
         pygame.display.set_caption("Pathfinding")
 
@@ -184,6 +185,11 @@ class Renderer:
             Renderer.TILE_SIZE,
         )
 
+        # test
+        font = pygame.freetype.Font("assets/menlo.ttc", 24)
+        text = font.render('A* WEIGHT', (255, 255, 255), (0, 0, 0))
+        self.window.blit(text[0], dest=(800,10))
+
         pygame.display.flip()
 
 
@@ -195,7 +201,7 @@ class Node:
 
 
 class AStar:
-    WEIGHT = 1.25
+    WEIGHT = 1.2
 
     def __init__(self, game):
         self.game = game
@@ -266,9 +272,16 @@ class AStar:
 
 if __name__ == "__main__":
     pygame.init()
+    pygame.font.init()
     clock = pygame.time.Clock()
 
-    game = Game(100, 100)
+    while True:
+        game = Game(100, 100)
+        astar = AStar(game)
+        if astar.search():
+            break
+        
+        
     renderer = Renderer(game)
 
     # Main loop
@@ -282,17 +295,17 @@ if __name__ == "__main__":
 
         # Handle movement
         keys = pygame.key.get_pressed()
-        new_pos = game.start
-        if keys[pygame.K_LEFT]:
-            new_pos = State(game.start.x - 1, game.start.y)
-        if keys[pygame.K_RIGHT]:
-            new_pos = State(game.start.x + 1, game.start.y)
-        if keys[pygame.K_UP]:
-            new_pos = State(game.start.x, game.start.y - 1)
-        if keys[pygame.K_DOWN]:
-            new_pos = State(game.start.x, game.start.y + 1)
-        if game.is_valid(new_pos):
-            game.start = new_pos
+        x, y = game.start.x, game.start.y
+        if keys[pygame.K_LEFT] and game.is_valid(State(x - 1, y)):
+            x -= 1
+        if keys[pygame.K_RIGHT] and game.is_valid(State(x + 1, y)):
+            x += 1
+        if keys[pygame.K_UP] and game.is_valid(State(x, y - 1)):
+            y -= 1
+        if keys[pygame.K_DOWN] and game.is_valid(State(x, y + 1)):
+            y += 1
+
+        game.start = State(x, y)
 
         astar = AStar(game)
         path = astar.search()

@@ -97,98 +97,59 @@ class Renderer:
         )
         pygame.display.set_caption("Pathfinding")
 
+    def draw_pixel(self, x, y, color):
+        pygame.draw.rect(
+            self.window,
+            color,
+            (
+                x * Renderer.TILE_SIZE,
+                y * Renderer.TILE_SIZE,
+                Renderer.TILE_SIZE,
+                Renderer.TILE_SIZE,
+            ),
+        )
+
+    def draw_circle(self, x, y, color):
+        pygame.draw.circle(
+            self.window,
+            color,
+            (
+                x * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
+                y * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
+            ),
+            Renderer.TILE_SIZE,
+        )
+
     def draw(self, path=None, astar=None):
         # Draw map
         for y in range(self.game.height):
             for x in range(self.game.width):
                 if self.game.grid[y][x]:
-                    pygame.draw.rect(
-                        self.window,
-                        Renderer.LIGHT,
-                        (
-                            x * Renderer.TILE_SIZE,
-                            y * Renderer.TILE_SIZE,
-                            Renderer.TILE_SIZE,
-                            Renderer.TILE_SIZE,
-                        ),
-                    )
+                    self.draw_pixel(x, y, Renderer.LIGHT)
                 else:
-                    pygame.draw.rect(
-                        self.window,
-                        Renderer.DARK,
-                        (
-                            x * Renderer.TILE_SIZE,
-                            y * Renderer.TILE_SIZE,
-                            Renderer.TILE_SIZE,
-                            Renderer.TILE_SIZE,
-                        ),
-                    )
+                    self.draw_pixel(x, y, Renderer.DARK)
 
-        # Draw explored
         if astar:
+            # Draw explored
             for state in astar.explored:
-                pygame.draw.rect(
-                    self.window,
-                    Renderer.EXPLORED,
-                    (
-                        state.x * Renderer.TILE_SIZE,
-                        state.y * Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                    ),
-                )
-
+                self.draw_pixel(state.x, state.y, Renderer.EXPLORED)
             # Draw frontier
             for state in astar.in_frontier:
-                pygame.draw.rect(
-                    self.window,
-                    Renderer.FRONTIER,
-                    (
-                        state.x * Renderer.TILE_SIZE,
-                        state.y * Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                    ),
-                )
+                self.draw_pixel(state.x, state.y, Renderer.FRONTIER)
 
         # Draw path
         if path:
             for state in path:
-                pygame.draw.rect(
-                    self.window,
-                    Renderer.PATH,
-                    (
-                        state.x * Renderer.TILE_SIZE,
-                        state.y * Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                        Renderer.TILE_SIZE,
-                    ),
-                )
+                self.draw_pixel(state.x, state.y, Renderer.PATH)
 
         # Draw start and goal
-        pygame.draw.circle(
-            self.window,
-            Renderer.START,
-            (
-                self.game.start.x * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
-                self.game.start.y * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
-            ),
-            Renderer.TILE_SIZE,
-        )
-        pygame.draw.circle(
-            self.window,
-            Renderer.GOAL,
-            (
-                self.game.goal.x * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
-                self.game.goal.y * Renderer.TILE_SIZE + Renderer.TILE_SIZE / 2,
-            ),
-            Renderer.TILE_SIZE,
-        )
+        self.draw_circle(self.game.start.x, self.game.start.y, Renderer.START)
+        self.draw_circle(self.game.goal.x, self.game.goal.y, Renderer.GOAL)
 
         # test
         font = pygame.freetype.Font("assets/menlo.ttc", 24)
-        text = font.render('A* WEIGHT', (255, 255, 255), (0, 0, 0))
-        self.window.blit(text[0], dest=(800,10))
+        text = font.render("A* WEIGHT", (255, 255, 255), (0, 0, 0))
+        self.window.blit(text[0], dest=(800, 10))
 
         pygame.display.flip()
 
@@ -280,8 +241,7 @@ if __name__ == "__main__":
         astar = AStar(game)
         if astar.search():
             break
-        
-        
+
     renderer = Renderer(game)
 
     # Main loop

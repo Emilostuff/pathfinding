@@ -189,10 +189,9 @@ class AStar:
         # Check if the node is already in the frontier
         if node.state in self.in_frontier:
             current_node = self.in_frontier[node.state]
-            current_cost = current_node.path_cost + self.heuristic(current_node)
 
             # If the new node is better, update the frontier and the node
-            if cost < current_cost:
+            if node.path_cost < current_node.path_cost:
                 self.frontier.decrease_key(current_node, cost)
                 self.in_frontier[node.state].path_cost = node.path_cost
                 self.in_frontier[node.state].parent = node.parent
